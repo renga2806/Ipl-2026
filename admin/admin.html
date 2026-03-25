@@ -1,1 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPL Predictor Admin</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <h1>IPL Predictor Admin</h1>
+      <p class="subtitle">You press the buttons. Everyone else complains.</p>
+    </div>
+    <nav>
+      <a class="nav-link" href="index.html">Voters</a>
+      <a class="nav-link active" href="admin.html">Admin</a>
+    </nav>
+  </header>
 
+  <main class="container admin-layout">
+    <section class="card">
+      <div class="section-heading">
+        <h2>Add User</h2>
+      </div>
+      <form id="addUserForm" class="stack gap-md">
+        <label>
+          <span>Name</span>
+          <input id="adminUserName" type="text" placeholder="e.g. Brownie" required />
+        </label>
+        <label>
+          <span>PIN</span>
+          <input id="adminUserPin" type="text" inputmode="numeric" placeholder="e.g. 1234" required />
+        </label>
+        <button type="submit">Add User</button>
+      </form>
+      <div id="addUserMessage" class="message hidden"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <h2>Existing Users</h2>
+        <button id="refreshUsersBtn" class="ghost-btn">Refresh</button>
+      </div>
+      <div id="usersState" class="muted">Loading users...</div>
+      <div id="usersList"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <h2>Add Match</h2>
+      </div>
+      <form id="addMatchForm" class="stack gap-md">
+        <div class="form-grid two-up">
+          <label>
+            <span>Team 1</span>
+            <input id="team1Input" type="text" placeholder="CSK" required />
+          </label>
+          <label>
+            <span>Team 2</span>
+            <input id="team2Input" type="text" placeholder="RCB" required />
+          </label>
+        </div>
+        <label>
+          <span>Match Date</span>
+          <input id="matchDateInput" type="date" required />
+        </label>
+        <button type="submit">Add Match</button>
+      </form>
+      <div id="addMatchMessage" class="message hidden"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <h2>Bulk Upload Matches</h2>
+      </div>
+      <p class="muted small">JSON array format: [{"team1":"CSK","team2":"RCB","date":"2026-03-25"}]</p>
+      <textarea id="bulkMatchesInput" rows="8" placeholder='[{"team1":"CSK","team2":"RCB","date":"2026-03-25"}]'></textarea>
+      <div class="actions-row">
+        <button id="bulkUploadBtn">Upload JSON</button>
+      </div>
+      <div id="bulkUploadMessage" class="message hidden"></div>
+    </section>
+
+    <section class="card full-span">
+      <div class="section-heading">
+        <h2>Manage Matches</h2>
+        <div class="inline-actions">
+          <input id="adminDateFilter" type="date" />
+          <button id="filterMatchesBtn" class="ghost-btn">Show Date</button>
+          <button id="showAllMatchesBtn" class="ghost-btn">Show All</button>
+        </div>
+      </div>
+      <div id="matchesState" class="muted">Loading matches...</div>
+      <div id="adminMatches"></div>
+    </section>
+
+    <section class="card full-span">
+      <div class="section-heading">
+        <h2>Votes Overview</h2>
+        <button id="refreshVotesBtn" class="ghost-btn">Refresh</button>
+      </div>
+      <div id="votesState" class="muted">Loading votes...</div>
+      <div id="votesOverview"></div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
