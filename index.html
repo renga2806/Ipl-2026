@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPL Predictor</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <h1>IPL Predictor</h1>
+      <p class="subtitle">Daily predictions, leaderboard, and a little bit of ego damage.</p>
+    </div>
+    <nav>
+      <a class="nav-link active" href="index.html">Voters</a>
+      <a class="nav-link" href="admin.html">Admin</a>
+    </nav>
+  </header>
+
+  <main class="container two-col">
+    <section class="card">
+      <div class="section-heading">
+        <h2>Leaderboard</h2>
+        <button id="refreshLeaderboardBtn" class="ghost-btn">Refresh</button>
+      </div>
+      <div id="leaderboardState" class="muted">Loading leaderboard...</div>
+      <div id="leaderboard"></div>
+    </section>
+
+    <section class="card">
+      <div class="section-heading">
+        <h2>Today's Matches</h2>
+        <div id="todayLabel" class="chip"></div>
+      </div>
+
+      <form id="voteForm" class="stack gap-md">
+        <div class="form-grid two-up">
+          <label>
+            <span>Name</span>
+            <select id="userSelect" required>
+              <option value="">Select your name</option>
+            </select>
+          </label>
+          <label>
+            <span>PIN</span>
+            <input id="pinInput" type="password" inputmode="numeric" placeholder="Enter your PIN" required />
+          </label>
+        </div>
+
+        <div id="matchesContainer" class="stack gap-md"></div>
+
+        <div class="actions-row">
+          <button type="submit" id="submitVotesBtn">Submit Votes</button>
+        </div>
+      </form>
+
+      <div id="voteMessage" class="message hidden"></div>
+    </section>
+  </main>
+
+  <section class="container card full-width">
+    <div class="section-heading">
+      <h2>Recent Results</h2>
+      <button id="refreshRecentBtn" class="ghost-btn">Refresh</button>
+    </div>
+    <div id="recentResultsState" class="muted">Loading recent results...</div>
+    <div id="recentResults"></div>
+  </section>
+
+  <script src="script.js"></script>
+</body>
+</html>
