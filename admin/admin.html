@@ -96,24 +96,32 @@
     </div>
 
     <section class="card surface full-span-section">
-      <div class="section-heading">
+      <div class="section-heading collapsible-header" onclick="toggleUsersSection()">
         <div>
           <p class="mini-label">Manage users</p>
           <h2>Existing participants</h2>
         </div>
+        <span id="usersToggleIcon">▼</span>
       </div>
-      <div id="usersList" class="users-grid"></div>
+
+      <div id="usersContent">
+        <div id="usersList" class="users-grid"></div>
+      </div>
     </section>
 
     <section class="card surface full-span-section">
-      <div class="section-heading">
+      <div class="section-heading collapsible-header" onclick="toggleMatchesSection()">
         <div>
           <p class="mini-label">Manage matches</p>
           <h2>Matches and results</h2>
         </div>
+        <span id="matchesToggleIcon">▼</span>
       </div>
-      <p id="matchesAdminState" class="muted">Loading matches...</p>
-      <div id="adminMatchesList" class="admin-matches-grid"></div>
+
+      <div id="matchesContent">
+        <p id="matchesAdminState" class="muted">Loading matches...</p>
+        <div id="adminMatchesList" class="admin-matches-grid"></div>
+      </div>
     </section>
 
     <section class="card surface full-span-section">

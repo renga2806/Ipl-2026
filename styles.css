@@ -450,3 +450,55 @@ code {
     align-items: flex-start;
   }
 }
+
+.collapsible-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+#matchesToggleIcon {
+  font-size: 14px;
+  color: #64748b;
+}
+
+#matchesContent {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
+
+#matchesContent.open {
+  max-height: 70vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#usersToggleIcon {
+  font-size: 14px;
+  color: #64748b;
+}
+
+#usersContent {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
+
+#usersContent.open {
+  max-height: 70vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 769px) {
+  #matchesContent {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  #usersContent {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}

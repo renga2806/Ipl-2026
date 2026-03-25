@@ -115,7 +115,7 @@ async function getUsers() {
 }
 
 async function getMatches(dateFilter = null) {
-  let query = db.from('matches').select('*').order('match_date', { ascending: true }).order('created_at', { ascending: true });
+  let query = db.from('matches').select('*').order('match_num', { ascending: true }).order('created_at', { ascending: true });
   if (dateFilter) query = query.eq('match_date', dateFilter);
   const { data, error } = await query;
   if (error) throw error;
@@ -194,9 +194,8 @@ async function renderLeaderboard() {
       .map((item, index) => `
         <article class="leader-row">
           <div class="rank-badge rank-${index + 1}">${index + 1}</div>
-          <div class="leader-name">${escapeHtml(item.name)}</div>
+          <div class="leader-name">${escapeHtml(item.name)} - ${item.points}</div>
           <div class="bar-wrap"><div class="bar-fill" style="width: ${(item.points / max) * 100}%"></div></div>
-          <div class="score-pill">${item.points}</div>
         </article>
       `)
       .join('');
@@ -701,8 +700,9 @@ async function setupAdminForms() {
           const team1 = normalizeTeamCode(item.team1 || item.teamA);
           const team2 = normalizeTeamCode(item.team2 || item.teamB);
           const date = item.date || item.match_date;
+          const match_num = item.matchnum
           if (!team1 || !team2 || !date) throw new Error('Every row needs team1, team2, and date.');
-          return { team1, team2, match_date: date, status: 'upcoming' };
+          return { team1, team2, match_date: date, status: 'upcoming', match_num };
         });
 
         const { error } = await db.from('matches').insert(rows);
@@ -743,3 +743,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initVoterPage();
   }
 });
+
+function toggleMatchesSection() {
+  const content = document.getElementById("matchesContent");
+  const icon = document.getElementById("matchesToggleIcon");
+
+  content.classList.toggle("open");
+
+  if (content.classList.contains("open")) {
+    icon.textContent = "▲";
+  } else {
+    icon.textContent = "▼";
+  }
+}
+
+function toggleUsersSection() {
+  const content = document.getElementById("usersContent");
+  const icon = document.getElementById("usersToggleIcon");
+
+  content.classList.toggle("open");
+
+  if (content.classList.contains("open")) {
+    icon.textContent = "▲";
+  } else {
+    icon.textContent = "▼";
+  }
+}
