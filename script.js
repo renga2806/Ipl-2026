@@ -51,7 +51,10 @@ const todayString = () =>
     day: 'numeric',
   });
 
-const isoToday = () => new Date().toISOString().split('T')[0];
+const isoToday = () =>
+  new Date().toLocaleDateString('en-CA', {
+    timeZone: 'Asia/Kolkata'
+  });
 
 function normalizeTeamCode(value = '') {
   const raw = String(value).trim();
