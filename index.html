@@ -4,69 +4,106 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IPL Predictor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body data-page="voter">
   <header class="site-header">
     <div>
-      <h1>IPL Predictor</h1>
-      <p class="subtitle">Daily predictions, leaderboard, and a little bit of ego damage.</p>
+      <p class="eyebrow">IPL 2026 Predictor</p>
+      <h1>Daily picks, live bragging rights</h1>
+      <p class="subtitle">Vote for today's match, watch the leaderboard move, and pretend it was skill.</p>
     </div>
-    <nav>
-      <a class="nav-link active" href="index.html">Voters</a>
-    </nav>
+    <div class="header-actions">
+      <button id="refreshAllBtn" class="ghost-btn" type="button">Refresh</button>
+    </div>
   </header>
 
-  <main class="container two-col">
-    <section class="card">
-      <div class="section-heading">
-        <h2>Leaderboard</h2>
-        <button id="refreshLeaderboardBtn" class="ghost-btn">Refresh</button>
+  <main class="container">
+    <section class="hero card surface">
+      <div class="hero-copy">
+        <p class="mini-label">Today</p>
+        <h2 id="todayLabel">Loading...</h2>
+        <p class="muted">Multiple matches in a day are supported. Because IPL scheduling enjoys cardio.</p>
       </div>
-      <div id="leaderboardState" class="muted">Loading leaderboard...</div>
-      <div id="leaderboard"></div>
+      <div class="hero-stats">
+        <div class="mini-stat">
+          <span class="mini-stat-label">Matches</span>
+          <strong id="todayMatchCount">0</strong>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-label">Voters</span>
+          <strong id="userCount">0</strong>
+        </div>
+      </div>
     </section>
 
-    <section class="card">
+    <div class="main-grid">
+      <section class="card surface">
+        <div class="section-heading">
+          <div>
+            <p class="mini-label">Leaderboard</p>
+            <h2>Standings</h2>
+          </div>
+          <span class="chip">Auto-calculated</span>
+        </div>
+        <p id="leaderboardState" class="muted">Loading leaderboard...</p>
+        <div id="leaderboard" class="leaderboard-list"></div>
+      </section>
+
+      <section class="card surface">
+        <div class="section-heading">
+          <div>
+            <p class="mini-label">Vote now</p>
+            <h2>Today's matches</h2>
+          </div>
+        </div>
+        <form id="voteForm" class="stack gap-lg">
+          <div class="form-grid two-up">
+            <label>
+              <span>Name</span>
+              <select id="userSelect" required>
+                <option value="">Select your name</option>
+              </select>
+            </label>
+            <label>
+              <span>PIN</span>
+              <input id="pinInput" type="password" inputmode="numeric" placeholder="Enter your PIN" required />
+            </label>
+          </div>
+
+          <div id="matchesContainer" class="matches-grid">
+            <div class="empty-state">Loading matches...</div>
+          </div>
+
+          <div class="actions-row">
+            <button id="submitVotesBtn" type="submit">Submit votes</button>
+            <span class="muted small">One vote per match. You can update it while the match is still open.</span>
+          </div>
+          <div id="voteMessage" class="message hidden"></div>
+        </form>
+      </section>
+    </div>
+
+    <section class="card surface">
       <div class="section-heading">
-        <h2>Today's Matches</h2>
-        <div id="todayLabel" class="chip"></div>
+        <div>
+          <p class="mini-label">History</p>
+          <h2>Recent results</h2>
+        </div>
+        <button id="refreshResultsBtn" class="ghost-btn" type="button">Refresh</button>
       </div>
-
-      <form id="voteForm" class="stack gap-md">
-        <div class="form-grid two-up">
-          <label>
-            <span>Name</span>
-            <select id="userSelect" required>
-              <option value="">Select your name</option>
-            </select>
-          </label>
-          <label>
-            <span>PIN</span>
-            <input id="pinInput" type="password" inputmode="numeric" placeholder="Enter your PIN" required />
-          </label>
-        </div>
-
-        <div id="matchesContainer" class="stack gap-md"></div>
-
-        <div class="actions-row">
-          <button type="submit" id="submitVotesBtn">Submit Votes</button>
-        </div>
-      </form>
-
-      <div id="voteMessage" class="message hidden"></div>
+      <p id="resultsState" class="muted">Loading recent results...</p>
+      <div id="recentResults" class="result-list"></div>
     </section>
   </main>
 
-  <section class="container card full-width">
-    <div class="section-heading">
-      <h2>Recent Results</h2>
-      <button id="refreshRecentBtn" class="ghost-btn">Refresh</button>
-    </div>
-    <div id="recentResultsState" class="muted">Loading recent results...</div>
-    <div id="recentResults"></div>
-  </section>
+  <footer class="site-footer">
+    <p>Team logos shown here are placeholders for layout and testing. Replace them with your own stored assets in <code>assets/logos/</code>. Official names and marks belong to their respective IPL franchises and rights holders. This app is for non-commercial, informational fun. Yes, even the overconfident predictions.</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>
