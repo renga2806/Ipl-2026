@@ -4,107 +4,132 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IPL Predictor Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body data-page="admin">
   <header class="site-header">
     <div>
-      <h1>IPL Predictor Admin</h1>
-      <p class="subtitle">You press the buttons. Everyone else complains.</p>
+      <p class="eyebrow">IPL 2026 Predictor</p>
+      <h1>Admin control room</h1>
+      <p class="subtitle">Add matches, manage users, update results, and quietly rule the league from behind the curtain.</p>
     </div>
-    <nav>
-      <a class="nav-link" href="index.html">Voters</a>
-      <a class="nav-link active" href="admin.html">Admin</a>
-    </nav>
+    <div class="header-actions">
+      <a class="ghost-btn link-btn" href="../index.html">Open voter view</a>
+      <button id="refreshAdminBtn" class="ghost-btn" type="button">Refresh</button>
+    </div>
   </header>
 
-  <main class="container admin-layout">
-    <section class="card">
-      <div class="section-heading">
-        <h2>Add User</h2>
-      </div>
-      <form id="addUserForm" class="stack gap-md">
-        <label>
-          <span>Name</span>
-          <input id="adminUserName" type="text" placeholder="e.g. Brownie" required />
-        </label>
-        <label>
-          <span>PIN</span>
-          <input id="adminUserPin" type="text" inputmode="numeric" placeholder="e.g. 1234" required />
-        </label>
-        <button type="submit">Add User</button>
-      </form>
-      <div id="addUserMessage" class="message hidden"></div>
-    </section>
-
-    <section class="card">
-      <div class="section-heading">
-        <h2>Existing Users</h2>
-        <button id="refreshUsersBtn" class="ghost-btn">Refresh</button>
-      </div>
-      <div id="usersState" class="muted">Loading users...</div>
-      <div id="usersList"></div>
-    </section>
-
-    <section class="card">
-      <div class="section-heading">
-        <h2>Add Match</h2>
-      </div>
-      <form id="addMatchForm" class="stack gap-md">
-        <div class="form-grid two-up">
+  <main class="container">
+    <div class="admin-grid">
+      <section class="card surface">
+        <div class="section-heading">
+          <div>
+            <p class="mini-label">Users</p>
+            <h2>Add participant</h2>
+          </div>
+        </div>
+        <form id="addUserForm" class="stack gap-md">
           <label>
-            <span>Team 1</span>
-            <input id="team1Input" type="text" placeholder="CSK" required />
+            <span>Name</span>
+            <input id="newUserName" type="text" placeholder="e.g. Renga" required />
           </label>
           <label>
-            <span>Team 2</span>
-            <input id="team2Input" type="text" placeholder="RCB" required />
+            <span>PIN</span>
+            <input id="newUserPin" type="text" inputmode="numeric" placeholder="e.g. 2806" required />
           </label>
+          <button type="submit">Add user</button>
+        </form>
+        <div id="addUserMessage" class="message hidden"></div>
+      </section>
+
+      <section class="card surface">
+        <div class="section-heading">
+          <div>
+            <p class="mini-label">Matches</p>
+            <h2>Add single match</h2>
+          </div>
         </div>
-        <label>
-          <span>Match Date</span>
-          <input id="matchDateInput" type="date" required />
-        </label>
-        <button type="submit">Add Match</button>
-      </form>
-      <div id="addMatchMessage" class="message hidden"></div>
-    </section>
+        <form id="addMatchForm" class="stack gap-md">
+          <label><span>Team 1</span><input id="team1Input" type="text" placeholder="CSK" required /></label>
+          <label><span>Team 2</span><input id="team2Input" type="text" placeholder="MI" required /></label>
+          <label><span>Date</span><input id="matchDateInput" type="date" required /></label>
+          <button type="submit">Add match</button>
+        </form>
+        <div id="addMatchMessage" class="message hidden"></div>
+      </section>
 
-    <section class="card">
-      <div class="section-heading">
-        <h2>Bulk Upload Matches</h2>
-      </div>
-      <p class="muted small">JSON array format: [{"team1":"CSK","team2":"RCB","date":"2026-03-25"}]</p>
-      <textarea id="bulkMatchesInput" rows="8" placeholder='[{"team1":"CSK","team2":"RCB","date":"2026-03-25"}]'></textarea>
-      <div class="actions-row">
-        <button id="bulkUploadBtn">Upload JSON</button>
-      </div>
-      <div id="bulkUploadMessage" class="message hidden"></div>
-    </section>
+      <section class="card surface">
+        <div class="section-heading">
+          <div>
+            <p class="mini-label">Bulk load</p>
+            <h2>Upload matches JSON</h2>
+          </div>
+        </div>
+        <form id="jsonUploadForm" class="stack gap-md">
+          <label>
+            <span>JSON array</span>
+            <textarea id="matchesJsonInput" placeholder='[{"team1":"CSK","team2":"MI","date":"2026-04-01"}]'></textarea>
+          </label>
+          <button type="submit">Upload matches</button>
+        </form>
+        <div id="jsonUploadMessage" class="message hidden"></div>
+      </section>
 
-    <section class="card full-span">
+      <section class="card surface">
+        <div class="section-heading">
+          <div>
+            <p class="mini-label">Snapshot</p>
+            <h2>Quick stats</h2>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="mini-stat"><span class="mini-stat-label">Users</span><strong id="adminUserCount">0</strong></div>
+          <div class="mini-stat"><span class="mini-stat-label">Open matches</span><strong id="openMatchCount">0</strong></div>
+          <div class="mini-stat"><span class="mini-stat-label">Votes</span><strong id="adminVoteCount">0</strong></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card surface full-span-section">
       <div class="section-heading">
-        <h2>Manage Matches</h2>
-        <div class="inline-actions">
-          <input id="adminDateFilter" type="date" />
-          <button id="filterMatchesBtn" class="ghost-btn">Show Date</button>
-          <button id="showAllMatchesBtn" class="ghost-btn">Show All</button>
+        <div>
+          <p class="mini-label">Manage users</p>
+          <h2>Existing participants</h2>
         </div>
       </div>
-      <div id="matchesState" class="muted">Loading matches...</div>
-      <div id="adminMatches"></div>
+      <div id="usersList" class="users-grid"></div>
     </section>
 
-    <section class="card full-span">
+    <section class="card surface full-span-section">
       <div class="section-heading">
-        <h2>Votes Overview</h2>
-        <button id="refreshVotesBtn" class="ghost-btn">Refresh</button>
+        <div>
+          <p class="mini-label">Manage matches</p>
+          <h2>Matches and results</h2>
+        </div>
       </div>
-      <div id="votesState" class="muted">Loading votes...</div>
-      <div id="votesOverview"></div>
+      <p id="matchesAdminState" class="muted">Loading matches...</p>
+      <div id="adminMatchesList" class="admin-matches-grid"></div>
+    </section>
+
+    <section class="card surface full-span-section">
+      <div class="section-heading">
+        <div>
+          <p class="mini-label">Votes</p>
+          <h2>Latest submissions</h2>
+        </div>
+      </div>
+      <p id="votesAdminState" class="muted">Loading votes...</p>
+      <div id="votesList" class="vote-feed"></div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <p>Team logos shown here are placeholders for layout and testing. Replace them with your own stored assets in <code>../assets/logos/</code>. Official names and marks belong to their respective IPL franchises and rights holders. This app is for non-commercial, informational fun.</p>
+  </footer>
 
   <script src="../script.js"></script>
 </body>
