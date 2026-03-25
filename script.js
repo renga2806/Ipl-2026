@@ -196,7 +196,7 @@ async function renderLeaderboard() {
           <div class="rank-badge rank-${index + 1}">${index + 1}</div>
           <div class="leader-name">${escapeHtml(item.name)}</div>
           <div class="bar-wrap"><div class="bar-fill" style="width: ${(item.points / max) * 100}%"></div></div>
-          <div class="score-pill">${item.points} pt${item.points === 1 ? '' : 's'}</div>
+          <div class="score-pill">${item.points}</div>
         </article>
       `)
       .join('');
@@ -261,16 +261,16 @@ function updateSelectedCards(scope = document) {
 }
 
 async function renderVoterPage() {
-  const todayLabel = document.getElementById('todayLabel');
+  //const todayLabel = document.getElementById('todayLabel');
   const userSelect = document.getElementById('userSelect');
   const matchesContainer = document.getElementById('matchesContainer');
   const voteForm = document.getElementById('voteForm');
   const voteMessage = document.getElementById('voteMessage');
-  const userCountEl = document.getElementById('userCount');
-  const todayMatchCountEl = document.getElementById('todayMatchCount');
+  //const userCountEl = document.getElementById('userCount');
+  //const todayMatchCountEl = document.getElementById('todayMatchCount');
   if (!voteForm) return;
 
-  todayLabel.textContent = todayString();
+  //todayLabel.textContent = todayString();
   matchesContainer.innerHTML = '<div class="empty-state">Loading matches...</div>';
 
   try {
@@ -279,8 +279,8 @@ async function renderVoterPage() {
       '<option value="">Select your name</option>' +
       users.map((user) => `<option value="${user.id}">${escapeHtml(user.name)}</option>`).join('');
 
-    userCountEl.textContent = String(users.length);
-    todayMatchCountEl.textContent = String(matches.length);
+    //userCountEl.textContent = String(users.length);
+    //todayMatchCountEl.textContent = String(matches.length);
 
     if (!matches.length) {
       matchesContainer.innerHTML = '<div class="empty-state">No matches scheduled for today. Even cricket takes a day off sometimes.</div>';
@@ -293,7 +293,7 @@ async function renderVoterPage() {
       .map((match, index) => {
         const isLocked = match.status !== 'upcoming';
         const totalVotes = voteGroups[index].length;
-        const statusText =
+        const statusText = isLocked ? "Match in progress" :
           match.status === 'completed'
             ? `${teamDisplayName(match[match.winner])} won`
             : match.status === 'abandoned'
@@ -318,14 +318,12 @@ async function renderVoterPage() {
             <div class="team-options">
               <label class="option-card">
                 <input type="radio" name="match-${match.id}" value="team1" ${isLocked ? 'disabled' : ''} />
-                <span class="option-label">${teamMarkup(match.team1, 'team-inline')}</span>
-                <span class="option-help">Back ${escapeHtml(teamDisplayName(match.team1))}</span>
+                <span class="option-help">Back ${escapeHtml(teamDisplayName(match.team1))}!</span>
               </label>
 
               <label class="option-card">
                 <input type="radio" name="match-${match.id}" value="team2" ${isLocked ? 'disabled' : ''} />
-                <span class="option-label">${teamMarkup(match.team2, 'team-inline')}</span>
-                <span class="option-help">Back ${escapeHtml(teamDisplayName(match.team2))}</span>
+                <span class="option-help">Go ${escapeHtml(teamDisplayName(match.team2))}!</span>
               </label>
             </div>
 
@@ -338,6 +336,7 @@ async function renderVoterPage() {
     updateSelectedCards(matchesContainer);
     matchesContainer.addEventListener('change', () => updateSelectedCards(matchesContainer));
   } catch (error) {
+    console.log(error);
     matchesContainer.innerHTML = `<div class="empty-state">Could not load matches: ${escapeHtml(error.message)}</div>`;
   }
 
@@ -458,10 +457,11 @@ async function renderAdminUsers() {
 function resultButtonMarkup(match) {
   return `
     <div class="match-actions">
-      <button type="button" data-result="${match.id}:team1">Mark ${escapeHtml(teamDisplayName(match.team1))} won</button>
-      <button type="button" data-result="${match.id}:team2">Mark ${escapeHtml(teamDisplayName(match.team2))} won</button>
+      <button type="button" data-result="${match.id}:team1">${escapeHtml(teamDisplayName(match.team1))} won</button>
+      <button type="button" data-result="${match.id}:team2">${escapeHtml(teamDisplayName(match.team2))} won</button>
       <button type="button" class="ghost-btn" data-result="${match.id}:abandoned">Mark abandoned</button>
       <button type="button" class="ghost-btn" data-result="${match.id}:upcoming">Reopen match</button>
+      <button type="button" class="ghost-btn" data-result="${match.id}:locked">Close voting</button>
     </div>
   `;
 }
@@ -557,6 +557,8 @@ async function renderAdminMatches() {
           updatePayload = { status: 'abandoned', winner: 'abandoned' };
         } else if (statusValue === 'upcoming') {
           updatePayload = { status: 'upcoming', winner: null };
+        } else if (statusValue === 'locked') {
+          updatePayload = { status: 'locked', winner: null };
         } else {
           updatePayload = { status: 'completed', winner: statusValue };
         }

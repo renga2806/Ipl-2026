@@ -81,6 +81,7 @@ a { color: inherit; }
   background: linear-gradient(180deg, var(--panel) 0%, var(--panel-soft) 100%);
   border: 1px solid rgba(217, 226, 239, 0.9);
   border-radius: var(--radius-xl);
+  margin-top: 10px;
   box-shadow: var(--shadow);
 }
 .card { padding: 20px; }
@@ -329,7 +330,7 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
   transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease, background .18s ease;
 }
 .option-card:hover {
-  border-color: rgba(36, 99, 235, 0.3);
+  border-color: #19398a;
   transform: translateY(-1px);
 }
 .option-card input {
@@ -341,7 +342,7 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 .option-card.is-selected {
   border-color: rgba(36, 99, 235, 0.46);
   background: #eef4ff;
-  box-shadow: 0 12px 24px rgba(36, 99, 235, 0.08);
+  box-shadow: 0 12px 24px #ffffff;
 }
 .option-label {
   display: flex;
@@ -365,6 +366,7 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 .status-upcoming { color: var(--accent); background: #eef4ff; }
 .status-completed { color: var(--good); background: #ecfbf4; }
 .status-abandoned { color: var(--warn); background: #fff7e7; }
+.status-locked { color: var(--warn); background: #fff7e7; }
 .match-actions, .vote-breakdown {
   display: flex;
   gap: 10px;
