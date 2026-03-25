@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPL Predictor</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">WhatsApp league, but with less caveman energy</p>
+        <h1>IPL Predictor</h1>
+        <p class="hero-copy">A zero-cost single-page app that stores votes, updates points, and shows the leaderboard. Everything runs in your browser using local storage.</p>
+      </div>
+      <div class="hero-actions">
+        <button id="seedBtn" class="ghost">Load sample data</button>
+        <button id="resetBtn" class="danger ghost">Reset all data</button>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Top section</p>
+            <h2>Leaderboard</h2>
+          </div>
+          <span id="leaderMeta" class="pill">0 participants</span>
+        </div>
+        <div id="leaderboard" class="leaderboard"></div>
+      </section>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Bottom section</p>
+            <h2>Today’s Match</h2>
+          </div>
+          <span id="matchStatusPill" class="pill muted">No match loaded</span>
+        </div>
+
+        <div id="todayMatch" class="match-banner empty-state">
+          No active match yet. Use the admin panel below and stop glaring at the screen.
+        </div>
+
+        <form id="voteForm" class="vote-form">
+          <div class="field">
+            <label for="participantSelect">Participant</label>
+            <select id="participantSelect" required></select>
+          </div>
+          <div class="field">
+            <label for="pinInput">PIN</label>
+            <input id="pinInput" type="password" maxlength="6" placeholder="4-digit PIN" required />
+          </div>
+          <div class="field full-width">
+            <label>Pick today’s winner</label>
+            <div id="teamOptions" class="radio-grid"></div>
+          </div>
+          <div class="form-actions full-width">
+            <button id="submitVoteBtn" type="submit">Submit vote</button>
+          </div>
+          <p id="voteMessage" class="message"></p>
+        </form>
+      </section>
+
+      <section class="card two-col-span">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Admin corner</p>
+            <h2>Manage Match & Result</h2>
+          </div>
+          <span class="pill muted">Only you should touch this. Obviously they won’t listen.</span>
+        </div>
+
+        <div class="admin-grid">
+          <div class="admin-panel">
+            <h3>Setup participants</h3>
+            <form id="participantForm" class="stack-form">
+              <input id="participantsInput" type="text" placeholder="Example: Navas, Ashwa, Kowshi, Kather, Noufal, Renga" />
+              <button type="submit">Save participants</button>
+              <p class="hint">Each participant gets a default PIN: <strong>1234</strong>. Change them below after setup.</p>
+            </form>
+
+            <div id="pinsList" class="pins-list"></div>
+          </div>
+
+          <div class="admin-panel">
+            <h3>Create / update today’s match</h3>
+            <form id="matchForm" class="stack-form">
+              <input id="teamAInput" type="text" placeholder="Team 1, like CSK" required />
+              <input id="teamBInput" type="text" placeholder="Team 2, like RCB" required />
+              <input id="matchDateInput" type="date" required />
+              <button type="submit">Save today’s match</button>
+            </form>
+
+            <h3>Close match and award points</h3>
+            <div class="result-actions">
+              <button class="secondary" data-result="teamA">Mark Team 1 won</button>
+              <button class="secondary" data-result="teamB">Mark Team 2 won</button>
+              <button class="secondary" data-result="abandoned">Mark abandoned / no result</button>
+            </div>
+            <p class="hint">Abandoned gives 1 point to everyone who submitted a vote. No vote, no point. Life is harsh.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card two-col-span">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Audit trail</p>
+            <h2>Recent Matches & Picks</h2>
+          </div>
+        </div>
+        <div id="history" class="history empty-state">No matches yet.</div>
+      </section>
+    </main>
+  </div>
+
+  <template id="leaderRowTemplate">
+    <div class="leader-row">
+      <div class="leader-name"></div>
+      <div class="bar-wrap"><div class="bar"></div></div>
+      <div class="leader-score"></div>
+    </div>
+  </template>
+
+  <script src="script.js"></script>
+</body>
+</html>
