@@ -137,9 +137,19 @@ async function getVotes() {
 async function getVotesForMatch(matchId) {
   const { data, error } = await db
     .from('votes')
-    .select('*, users(name)')
+    .select(`
+      id,
+      user_id,
+      match_id,
+      selected_team,
+      created_at,
+      users (
+        name
+      )
+    `)
     .eq('match_id', matchId)
     .order('created_at', { ascending: true });
+
   if (error) throw error;
   return data || [];
 }
@@ -282,138 +292,182 @@ function updateSelectedCards(scope = document) {
 }
 
 async function renderVoterPage() {
-  //const todayLabel = document.getElementById('todayLabel');
   const userSelect = document.getElementById('userSelect');
   const pinInput = document.getElementById('pinInput');
   const matchesContainer = document.getElementById('matchesContainer');
   const voteForm = document.getElementById('voteForm');
   const voteMessage = document.getElementById('voteMessage');
-  //const userCountEl = document.getElementById('userCount');
-  //const todayMatchCountEl = document.getElementById('todayMatchCount');
-  if (!voteForm) return;
+  const submitVotesBtn = document.getElementById('submitVotesBtn');
 
-  //todayLabel.textContent = todayString();
-  matchesContainer.innerHTML = '<div class="empty-state">Loading matches...</div>';
+  if (!voteForm || !matchesContainer) return;
+
+  matchesContainer.innerHTML = `<div class="empty-state">Loading matches...</div>`;
 
   try {
-    const [users, matches] = await Promise.all([getUsers(), getMatches(isoToday())]);
-    userSelect.innerHTML =
-      '<option value="">Select your name</option>' +
-      users.map((user) => `<option value="${user.id}">${escapeHtml(user.name)}</option>`).join('');
+    const [users, matches] = await Promise.all([
+      getUsers(),
+      getMatches(isoToday())
+    ]);
 
-    pinInput.value = '';
+    if (userSelect) {
+      const currentValue = userSelect.value;
+      userSelect.innerHTML =
+        '<option value="">Select your name</option>' +
+        users
+          .map((user) => `<option value="${user.id}">${escapeHtml(user.name)}</option>`)
+          .join('');
+      if (currentValue) userSelect.value = currentValue;
+    }
+
+    if (pinInput) {
+      pinInput.value = '';
+    }
 
     if (!matches.length) {
-      matchesContainer.innerHTML = '<div class="empty-state">No matches scheduled for today. Even cricket takes a day off sometimes.</div>';
-      document.getElementById('submitVotesBtn').disabled = true;
+      matchesContainer.innerHTML = `
+        <div class="empty-state">
+          No matches scheduled for today. Even cricket takes a day off.
+        </div>
+      `;
+      if (submitVotesBtn) submitVotesBtn.disabled = true;
       return;
     }
 
-    const voteGroups = await Promise.all(matches.map((match) => getVotesForMatch(match.id)));
+    if (submitVotesBtn) submitVotesBtn.disabled = false;
+
+    const voteGroups = await Promise.all(
+      matches.map((match) => getVotesForMatch(match.id))
+    );
+
     matchesContainer.innerHTML = matches
       .map((match, index) => {
-          const isLocked = match.status !== 'upcoming';
-          const totalVotes = voteGroups[index].length;
+        const isLocked = match.status !== 'upcoming';
+        const totalVotes = voteGroups[index].length;
 
-          const statusText =
-            match.status === 'completed'
-              ? `${teamDisplayName(match[match.winner])} won`
-              : match.status === 'abandoned'
-                ? 'Abandoned'
-                : isLocked
-                  ? 'Match in progress'
-                  : 'Open for voting';
+        const statusText =
+          match.status === 'completed'
+            ? `${teamDisplayName(match[match.winner])} won`
+            : match.status === 'abandoned'
+              ? 'Abandoned'
+              : isLocked
+                ? 'Match in progress'
+                : 'Open for voting';
+
+        const team1Votes = voteGroups[index].filter(
+          (vote) => vote.selected_team === 'team1'
+        );
+
+        const team2Votes = voteGroups[index].filter(
+          (vote) => vote.selected_team === 'team2'
+        );
 
         return `
           <article class="match-card">
-            <div class="match-head">
-              <p class="mini-label">${escapeHtml(match.match_date)}</p>
-              <span class="status-pill status-${escapeHtml(match.status)}">${escapeHtml(statusText)}</span>
-            </div>
-            <h3 class="match-title">
-              <div class="team-vs">
-                ${teamMarkup(match.team1, 'team-block')}
-                <span class="vs-pill">vs</span>
-                ${teamMarkup(match.team2, 'team-block')}
-              </div>
-            </h3>
-            <p class="match-meta">${totalVotes} vote${totalVotes === 1 ? '' : 's'} submitted</p>
-
-            <div class="team-options">
-              <label class="option-card">
-                <input type="radio" name="match-${match.id}" value="team1" ${isLocked ? 'disabled' : ''} />
-                <span class="option-help">Back ${escapeHtml(teamDisplayName(match.team1))}!</span>
-              </label>
-
-              <label class="option-card">
-                <input type="radio" name="match-${match.id}" value="team2" ${isLocked ? 'disabled' : ''} />
-                <span class="option-help">Go ${escapeHtml(teamDisplayName(match.team2))}!</span>
-              </label>
+            <div class="match-topline">
+              <span class="match-date">${escapeHtml(match.match_date)}</span>
+              <span class="match-status">${escapeHtml(statusText)}</span>
             </div>
 
-            ${isLocked ? '<p class="muted small">Voting is locked for this match.</p>' : ''}
+            <div class="match-teams">
+              ${teamMarkup(match.team1, 'team-block')}
+              <span class="vs-pill">vs</span>
+              ${teamMarkup(match.team2, 'team-block')}
+            </div>
+
+            <div class="votes-preview">
+              <p class="votes-title">Votes so far (${totalVotes})</p>
+              ${
+                totalVotes
+                  ? `
+                    <div class="votes-board">
+                      <div class="votes-board-head">
+                        <div class="votes-board-team">${escapeHtml(teamDisplayName(match.team1))}</div>
+                        <div class="votes-board-vs">VS</div>
+                        <div class="votes-board-team">${escapeHtml(teamDisplayName(match.team2))}</div>
+                      </div>
+
+                      <div class="votes-board-body">
+                        <div class="votes-board-col">
+                          ${
+                            team1Votes.length
+                              ? team1Votes
+                                  .map(
+                                    (vote) => `
+                                      <div class="vote-entry">
+                                        ${escapeHtml(vote.users?.name || 'Unknown')}
+                                      </div>
+                                    `
+                                  )
+                                  .join('')
+                              : `<div class="vote-entry vote-entry-empty">—</div>`
+                          }
+                        </div>
+
+                        <div class="votes-board-divider"></div>
+
+                        <div class="votes-board-col">
+                          ${
+                            team2Votes.length
+                              ? team2Votes
+                                  .map(
+                                    (vote) => `
+                                      <div class="vote-entry">
+                                        ${escapeHtml(vote.users?.name || 'Unknown')}
+                                      </div>
+                                    `
+                                  )
+                                  .join('')
+                              : `<div class="vote-entry vote-entry-empty">—</div>`
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  `
+                  : `<p class="votes-empty">No votes yet. Suspicious silence.</p>`
+              }
+            </div>
+
+            <div class="match-actions">
+              <label class="option-card ${isLocked ? 'is-disabled' : ''}">
+                <input
+                  type="radio"
+                  name="match-${match.id}"
+                  value="team1"
+                  ${isLocked ? 'disabled' : ''}
+                />
+                <span>Back ${escapeHtml(teamDisplayName(match.team1))}!</span>
+              </label>
+
+              <label class="option-card ${isLocked ? 'is-disabled' : ''}">
+                <input
+                  type="radio"
+                  name="match-${match.id}"
+                  value="team2"
+                  ${isLocked ? 'disabled' : ''}
+                />
+                <span>Go ${escapeHtml(teamDisplayName(match.team2))}!</span>
+              </label>
+            </div>
+
+            ${
+              isLocked
+                ? `<div class="locked-note">Voting is locked for this match.</div>`
+                : ''
+            }
           </article>
         `;
       })
       .join('');
 
     updateSelectedCards(matchesContainer);
-    matchesContainer.addEventListener('change', () => updateSelectedCards(matchesContainer));
   } catch (error) {
-    console.log(error);
-    matchesContainer.innerHTML = `<div class="empty-state">Could not load matches: ${escapeHtml(error.message)}</div>`;
+    console.error(error);
+    matchesContainer.innerHTML = `
+      <div class="empty-state">
+        Could not load matches: ${escapeHtml(error.message)}
+      </div>
+    `;
   }
-
-  voteForm.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    clearMessage(voteMessage);
-
-    const userId = userSelect.value;
-    const pin = document.getElementById('pinInput').value.trim();
-
-    if (!userId || !pin) {
-      showMessage(voteMessage, 'Pick your name and enter the PIN. Revolutionary stuff.', 'error');
-      return;
-    }
-
-    try {
-      const users = await getUsers();
-      const selectedUser = users.find((user) => user.id === userId);
-      if (!selectedUser || String(selectedUser.pin) !== pin) {
-        showMessage(voteMessage, 'Wrong PIN. The app remains unconvinced.', 'error');
-        return;
-      }
-
-      const todayMatches = await getMatches(isoToday());
-      const openMatches = todayMatches.filter((match) => match.status === 'upcoming');
-      const voteRows = [];
-
-      for (const match of openMatches) {
-        const selected = voteForm.querySelector(`input[name="match-${match.id}"]:checked`);
-        if (!selected) continue;
-        voteRows.push({
-          user_id: userId,
-          match_id: match.id,
-          selected_team: selected.value,
-        });
-      }
-
-      if (!voteRows.length) {
-        showMessage(voteMessage, 'Pick at least one open match before submitting. Wild concept, I know.', 'error');
-        return;
-      }
-
-      const { error } = await db.from('votes').upsert(voteRows, { onConflict: 'user_id,match_id' });
-      if (error) throw error;
-
-      showMessage(voteMessage, 'Votes submitted. Your cricket wisdom is now on record.');
-      voteForm.reset();
-      updateSelectedCards(matchesContainer);
-      await Promise.all([renderLeaderboard(), renderRecentResults(), renderVoterPage()]);
-    } catch (error) {
-      showMessage(voteMessage, `Could not submit votes: ${error.message}`, 'error');
-    }
-  });
 }
 
 async function renderAdminUsers() {
