@@ -368,7 +368,7 @@ async function renderVoterPage() {
               <span class="match-status">${escapeHtml(statusText)}</span>
             </div>
 
-            <div class="match-teams">
+            <div class="match-teams compact-match-teams">
               ${teamMarkup(match.team1, 'team-block')}
               <span class="vs-pill">vs</span>
               ${teamMarkup(match.team2, 'team-block')}
