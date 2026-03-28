@@ -684,3 +684,109 @@ code {
   font-size: 13px;
   color: #94a3b8;
 }
+
+@media (max-width: 768px) {
+  .match-card {
+    padding: 14px;
+  }
+
+  .match-topline {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .match-date {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .match-status {
+    align-self: flex-start;
+    font-size: 13px;
+    line-height: 1.2;
+    padding: 6px 10px;
+  }
+
+  .match-teams {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .team-block {
+    justify-content: flex-start;
+  }
+
+  .vs-pill {
+    justify-self: flex-start;
+    margin: -2px 0;
+  }
+
+  .votes-preview {
+    margin: 12px 0;
+  }
+
+  .votes-title {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .votes-board {
+    border-radius: 12px;
+  }
+
+  .votes-board-head {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .votes-board-team {
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    word-break: break-word;
+  }
+
+  .votes-board-vs {
+    font-size: 11px;
+  }
+
+  .votes-board-body {
+    grid-template-columns: 1fr 1px 1fr;
+  }
+
+  .votes-board-col {
+    padding: 8px;
+    gap: 6px;
+    min-height: 56px;
+  }
+
+  .vote-entry {
+    padding: 7px 8px;
+    font-size: 12px;
+    line-height: 1.2;
+    border-radius: 8px;
+  }
+
+  .match-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .option-card {
+    width: 100%;
+  }
+
+  .option-card span {
+    display: block;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+}

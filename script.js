@@ -381,9 +381,13 @@ async function renderVoterPage() {
                   ? `
                     <div class="votes-board">
                       <div class="votes-board-head">
-                        <div class="votes-board-team">${escapeHtml(teamDisplayName(match.team1))}</div>
+                        <div class="votes-board-team" title="${escapeHtml(teamDisplayName(match.team1))}">
+                          ${escapeHtml(match.team1)}
+                        </div>
                         <div class="votes-board-vs">VS</div>
-                        <div class="votes-board-team">${escapeHtml(teamDisplayName(match.team2))}</div>
+                        <div class="votes-board-team" title="${escapeHtml(teamDisplayName(match.team2))}">
+                          ${escapeHtml(match.team2)}
+                        </div>
                       </div>
 
                       <div class="votes-board-body">
