@@ -157,6 +157,11 @@ input, select, textarea {
   outline: none;
   transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
 }
+.refresh-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
 input:focus, select:focus, textarea:focus {
   border-color: rgba(36, 99, 235, 0.42);
   box-shadow: 0 0 0 4px rgba(36, 99, 235, 0.1);
