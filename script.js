@@ -154,6 +154,70 @@ async function getVotesForMatch(matchId) {
   return data || [];
 }
 
+
+async function getLeaderboard() {
+  const { data, error } = await db
+    .from('leaderboard')
+    .select(`
+      user_id,
+      points,
+      updated_at,
+      users (
+        name
+      )
+    `);
+  if (error) throw error;
+  return data || [];
+}
+
+async function rebuildLeaderboard() {
+  const [users, matches, votes] = await Promise.all([
+    getUsers(),
+    getMatches(),
+    getVotes()
+  ]);
+
+  const scoreMap = new Map(users.map(u => [u.id, { user_id: u.id, points: 0 }]));
+  const votesByMatch = new Map();
+
+  for (const vote of votes) {
+    if (!votesByMatch.has(vote.match_id)) votesByMatch.set(vote.match_id, []);
+    votesByMatch.get(vote.match_id).push(vote);
+    if (!scoreMap.has(vote.user_id)) {
+      scoreMap.set(vote.user_id, { user_id: vote.user_id, points: 0 });
+    }
+  }
+
+  for (const match of matches) {
+    const matchVotes = votesByMatch.get(match.id) || [];
+
+    if (match.status === 'abandoned' || match.winner === 'abandoned') {
+      matchVotes.forEach(v => scoreMap.get(v.user_id).points += 1);
+      continue;
+    }
+
+    if (match.status === 'completed' && match.winner) {
+      matchVotes.forEach(v => {
+        if (v.selected_team === match.winner) {
+          scoreMap.get(v.user_id).points += 1;
+        }
+      });
+    }
+  }
+
+  const rows = [...scoreMap.values()].map(r => ({
+    user_id: r.user_id,
+    points: r.points,
+    updated_at: new Date().toISOString()
+  }));
+
+  await db.from('leaderboard').delete().gt('points', -1);
+  if (rows.length) await db.from('leaderboard').insert(rows);
+
+  return rows;
+}
+
+
 async function computeLeaderboard() {
   const [users, matches, votes] = await Promise.all([getUsers(), getMatches(), getVotes()]);
   const scoreMap = new Map(users.map((user) => [user.id, { id: user.id, name: user.name, points: 0 }]));
@@ -188,6 +252,7 @@ async function computeLeaderboard() {
   return [...scoreMap.values()].sort((a, b) => b.points - a.points || a.name.localeCompare(b.name));
 }
 
+
 async function renderLeaderboard() {
   const stateEl = document.getElementById('leaderboardState');
   const listEl = document.getElementById('leaderboard');
@@ -197,44 +262,35 @@ async function renderLeaderboard() {
   listEl.innerHTML = '';
 
   try {
-    const leaders = await computeLeaderboard();
-    stateEl.textContent = leaders.length
-      ? ''
-      : 'No scores yet. Somebody still has to click something.';
-    if (!leaders.length) return;
+    const leaders = await getLeaderboard();
 
-    const max = Math.max(...leaders.map((item) => item.points), 1);
+    const normalized = leaders
+      .map(i => ({
+        id: i.user_id,
+        name: i.users?.name || 'Unknown',
+        points: Number(i.points || 0)
+      }))
+      .sort((a,b)=>b.points-a.points || a.name.localeCompare(b.name));
 
-    // 🧠 Step 1: get top 3 unique scores
-    const topScores = [...new Set(leaders.map(l => l.points))].slice(0, 3);
+    stateEl.textContent = normalized.length ? '' : 'No scores yet.';
+    if (!normalized.length) return;
 
-    // 🧠 Step 2: map score → rank (1,2,3)
-    const scoreRankMap = {};
-    topScores.forEach((score, i) => {
-      scoreRankMap[score] = i + 1;
-    });
+    const max = Math.max(...normalized.map(i=>i.points),1);
 
-    listEl.innerHTML = leaders
-      .map((item, index) => {
-        const rankClass = scoreRankMap[item.points]
-          ? `rank-${scoreRankMap[item.points]}`
-          : '';
-
-        return `
-          <article class="leader-row">
-            <div class="rank-badge ${rankClass}">${index + 1}</div>
-            <div class="leader-name">${escapeHtml(item.name)} - ${item.points}</div>
-            <div class="bar-wrap">
-              <div class="bar-fill" style="width: ${(item.points / max) * 100}%"></div>
-            </div>
-          </article>
-        `;
-      })
-      .join('');
-  } catch (error) {
-    stateEl.textContent = `Could not load leaderboard: ${error.message}`;
+    listEl.innerHTML = normalized.map((item,idx)=>`
+      <article class="leader-row">
+        <div class="rank-badge">${idx+1}</div>
+        <div class="leader-name">${escapeHtml(item.name)} - ${item.points}</div>
+        <div class="bar-wrap">
+          <div class="bar-fill" style="width:${(item.points/max)*100}%"></div>
+        </div>
+      </article>
+    `).join('');
+  } catch(e){
+    stateEl.textContent = e.message;
   }
 }
+
 
 async function renderRecentResults() {
   const stateEl = document.getElementById('resultsState');
@@ -648,6 +704,10 @@ async function renderAdminMatches() {
         try {
           const { error } = await db.from('matches').update(updatePayload).eq('id', matchId);
           if (error) throw error;
+
+          const shouldRebuild = updatePayload.winner !== null;
+          if (shouldRebuild) await rebuildLeaderboard();
+
           await Promise.all([
             renderAdminMatches(),
             renderRecentResults(),
