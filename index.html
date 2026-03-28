@@ -71,7 +71,17 @@
             </label>
             <label>
               <span>PIN</span>
-              <input id="pinInput" type="password" inputmode="numeric" placeholder="Enter your PIN" required />
+              <!--<input id="pinInput" type="password" inputmode="numeric" placeholder="Enter your PIN" required />-->
+              <input
+                      id="pinInput"
+                      type="password"
+                      name="pin"
+                      inputmode="numeric"
+                      pattern="\d{4}"
+                      maxlength="4"
+                      autocomplete="new-password"
+                      placeholder="4-digit PIN"
+              />
             </label>
           </div>
 
@@ -81,7 +91,6 @@
 
           <div class="actions-row">
             <button id="submitVotesBtn" type="submit">Submit votes</button>
-            <span class="muted small">One vote per match. You can update it while the match is still open.</span>
           </div>
           <div id="voteMessage" class="message hidden"></div>
         </form>

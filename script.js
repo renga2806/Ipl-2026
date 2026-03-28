@@ -188,19 +188,38 @@ async function renderLeaderboard() {
 
   try {
     const leaders = await computeLeaderboard();
-    stateEl.textContent = leaders.length ? '' : 'No scores yet. Somebody still has to click something.';
+    stateEl.textContent = leaders.length
+      ? ''
+      : 'No scores yet. Somebody still has to click something.';
     if (!leaders.length) return;
 
     const max = Math.max(...leaders.map((item) => item.points), 1);
 
+    // 🧠 Step 1: get top 3 unique scores
+    const topScores = [...new Set(leaders.map(l => l.points))].slice(0, 3);
+
+    // 🧠 Step 2: map score → rank (1,2,3)
+    const scoreRankMap = {};
+    topScores.forEach((score, i) => {
+      scoreRankMap[score] = i + 1;
+    });
+
     listEl.innerHTML = leaders
-      .map((item, index) => `
-        <article class="leader-row">
-          <div class="rank-badge rank-${index + 1}">${index + 1}</div>
-          <div class="leader-name">${escapeHtml(item.name)} - ${item.points}</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width: ${(item.points / max) * 100}%"></div></div>
-        </article>
-      `)
+      .map((item, index) => {
+        const rankClass = scoreRankMap[item.points]
+          ? `rank-${scoreRankMap[item.points]}`
+          : '';
+
+        return `
+          <article class="leader-row">
+            <div class="rank-badge ${rankClass}">${index + 1}</div>
+            <div class="leader-name">${escapeHtml(item.name)} - ${item.points}</div>
+            <div class="bar-wrap">
+              <div class="bar-fill" style="width: ${(item.points / max) * 100}%"></div>
+            </div>
+          </article>
+        `;
+      })
       .join('');
   } catch (error) {
     stateEl.textContent = `Could not load leaderboard: ${error.message}`;
@@ -265,6 +284,7 @@ function updateSelectedCards(scope = document) {
 async function renderVoterPage() {
   //const todayLabel = document.getElementById('todayLabel');
   const userSelect = document.getElementById('userSelect');
+  const pinInput = document.getElementById('pinInput');
   const matchesContainer = document.getElementById('matchesContainer');
   const voteForm = document.getElementById('voteForm');
   const voteMessage = document.getElementById('voteMessage');
@@ -281,8 +301,7 @@ async function renderVoterPage() {
       '<option value="">Select your name</option>' +
       users.map((user) => `<option value="${user.id}">${escapeHtml(user.name)}</option>`).join('');
 
-    //userCountEl.textContent = String(users.length);
-    //todayMatchCountEl.textContent = String(matches.length);
+    pinInput.value = '';
 
     if (!matches.length) {
       matchesContainer.innerHTML = '<div class="empty-state">No matches scheduled for today. Even cricket takes a day off sometimes.</div>';
@@ -293,14 +312,17 @@ async function renderVoterPage() {
     const voteGroups = await Promise.all(matches.map((match) => getVotesForMatch(match.id)));
     matchesContainer.innerHTML = matches
       .map((match, index) => {
-        const isLocked = match.status !== 'upcoming';
-        const totalVotes = voteGroups[index].length;
-        const statusText = isLocked ? "Match in progress" :
-          match.status === 'completed'
-            ? `${teamDisplayName(match[match.winner])} won`
-            : match.status === 'abandoned'
-              ? 'Abandoned'
-              : 'Open for voting';
+          const isLocked = match.status !== 'upcoming';
+          const totalVotes = voteGroups[index].length;
+
+          const statusText =
+            match.status === 'completed'
+              ? `${teamDisplayName(match[match.winner])} won`
+              : match.status === 'abandoned'
+                ? 'Abandoned'
+                : isLocked
+                  ? 'Match in progress'
+                  : 'Open for voting';
 
         return `
           <article class="match-card">
@@ -744,6 +766,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     await initAdminPage();
   } else {
     await initVoterPage();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const userSelect = document.getElementById('userSelect');
+
+  if (userSelect) {
+    userSelect.addEventListener('change', () => {
+      const pinInput = document.querySelector('input[name="pin"]');
+      if (pinInput) {
+        pinInput.value = '';
+      }
+    });
   }
 });
 

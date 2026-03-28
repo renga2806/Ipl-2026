@@ -240,6 +240,10 @@ button:disabled { opacity: 0.55; cursor: not-allowed; }
 .rank-badge.rank-1 { background: #fff4d8; color: #b7791f; }
 .rank-badge.rank-2 { background: #eef3f7; color: #51606d; }
 .rank-badge.rank-3 { background: #f8ede6; color: #a1623f; }
+
+.leaderboard-rank.gold { background: #fff4d8; color: #b7791f;  }
+.leaderboard-rank.silver { background: #eef3f7; color: #51606d; }
+.leaderboard-rank.bronze { background: #f8ede6; color: #a1623f; }
 .leader-name { font-weight: 700; }
 .bar-wrap {
   width: 100%;
