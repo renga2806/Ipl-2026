@@ -16,7 +16,9 @@
     <div>
       <p class="eyebrow">IPL 2026 Predictor</p>
       <h1>Daily picks, live bragging rights & A grand prize at the end!</h1>
-      <p class="subtitle">Vote for today's match, watch the leaderboard move, and pretend it was skill.</p>
+      <h2 class="subtitle">
+        Vote for today's match, watch the leaderboard move, and prove your cricket knowledge… or just your luck.
+      </h2>
     </div>
   </header>
 
@@ -97,6 +99,11 @@
           </div>
           <div id="voteMessage" class="message hidden"></div>
         </form>
+        <div class="info-row">
+          <button id="openRulesBtn" type="button" class="text-link-btn">
+            Rules & Conditions
+          </button>
+        </div>
       </section>
     </div>
 
@@ -120,3 +127,34 @@
   <script src="script.js"></script>
 </body>
 </html>
+
+
+<div id="rulesModal" class="modal hidden" aria-hidden="true">
+  <div class="modal-backdrop" data-close="true"></div>
+
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="rulesModalTitle">
+    <div class="modal-header">
+      <h3 id="rulesModalTitle">Rules & points</h3>
+      <button id="closeRulesBtn" type="button" class="modal-close-btn" aria-label="Close">
+        ×
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <ul class="rules-list">
+        <li>All the paricipants are given a unique <strong>PIN</strong>, you have to use it to vote</li>
+        <li>If you forgot or want the <strong>PIN</strong> to be changed to something easy for you to remember, reach out to the admin</li>
+        <li>Each correct prediction gets <strong>1 point</strong>.</li>
+        <li>If a match is <strong>abandoned / no result</strong>, everyone who voted gets <strong>1 point</strong>.</li>
+        <li>If you do not vote before the match is locked, you get <strong>0 points</strong>.</li>
+        <li>Once a match is locked, votes cannot be changed.</li>
+        <li>Leaderboard is updated after the admin marks the result.</li>
+        <li>If multiple users have the same score, they share the same highlight tier.</li>
+      </ul>
+    </div>
+
+    <div class="modal-footer">
+      <button id="closeRulesFooterBtn" type="button" class="ghost-btn">Close</button>
+    </div>
+  </div>
+</div>

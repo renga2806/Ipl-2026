@@ -807,3 +807,43 @@ function toggleUsersSection() {
     icon.textContent = "▼";
   }
 }
+
+function wireRulesModal() {
+  const modal = document.getElementById('rulesModal');
+  const openBtn = document.getElementById('openRulesBtn');
+  const closeBtn = document.getElementById('closeRulesBtn');
+  const closeFooterBtn = document.getElementById('closeRulesFooterBtn');
+
+  if (!modal || !openBtn) return;
+
+  const openModal = () => {
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  };
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  };
+
+  openBtn.addEventListener('click', openModal);
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (closeFooterBtn) closeFooterBtn.addEventListener('click', closeModal);
+
+  modal.addEventListener('click', (e) => {
+    if (e.target.dataset.close === 'true') {
+      closeModal();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+      closeModal();
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', wireRulesModal);
