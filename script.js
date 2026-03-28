@@ -800,8 +800,112 @@ async function setupAdminForms() {
   }
 }
 
+function setupVoterForm() {
+  const voteForm = document.getElementById('voteForm');
+  const voteMessage = document.getElementById('voteMessage');
+  const submitVotesBtn = document.getElementById('submitVotesBtn');
+
+  if (!voteForm || voteForm.dataset.bound === 'true') return;
+  voteForm.dataset.bound = 'true';
+
+  voteForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    clearMessage(voteMessage);
+
+    const userSelect = document.getElementById('userSelect');
+    const pinInput = document.getElementById('pinInput');
+
+    const userId = userSelect?.value?.trim();
+    const pin = pinInput?.value?.trim();
+
+    if (!userId) {
+      showMessage(voteMessage, 'Select your name first.', 'error');
+      return;
+    }
+
+    if (!pin) {
+      showMessage(voteMessage, 'Enter your PIN first.', 'error');
+      return;
+    }
+
+    try {
+      if (submitVotesBtn) submitVotesBtn.disabled = true;
+
+      const [users, matches] = await Promise.all([
+        getUsers(),
+        getMatches(isoToday())
+      ]);
+
+      const user = users.find((item) => String(item.id) === String(userId));
+
+      if (!user || String(user.pin) !== pin) {
+        showMessage(voteMessage, 'Invalid PIN. Nice try, international cricket hacker.', 'error');
+        return;
+      }
+
+      const openMatches = matches.filter((match) => match.status === 'upcoming');
+
+      if (!openMatches.length) {
+        showMessage(voteMessage, 'No open matches available for voting.', 'error');
+        return;
+      }
+
+      const rows = openMatches
+        .map((match) => {
+          const selected = voteForm.querySelector(`input[name="match-${match.id}"]:checked`);
+          if (!selected) return null;
+
+          return {
+            user_id: user.id,
+            match_id: match.id,
+            selected_team: selected.value
+          };
+        })
+        .filter(Boolean);
+
+      if (!rows.length) {
+        showMessage(voteMessage, 'Pick at least one match before submitting.', 'error');
+        return;
+      }
+
+      const openMatchIds = openMatches.map((match) => match.id);
+
+      const { error: deleteError } = await db
+        .from('votes')
+        .delete()
+        .eq('user_id', user.id)
+        .in('match_id', openMatchIds);
+
+      if (deleteError) throw deleteError;
+
+      const { error: insertError } = await db.from('votes').insert(rows);
+
+      if (insertError) throw insertError;
+
+      showMessage(
+        voteMessage,
+        `Votes submitted for ${rows.length} match${rows.length === 1 ? '' : 'es'}. Miracles do happen.`
+      );
+
+      if (pinInput) pinInput.value = '';
+
+      await Promise.all([
+        renderVoterPage(),
+        renderLeaderboard(),
+        renderRecentResults()
+      ]);
+    } catch (error) {
+      showMessage(voteMessage, `Could not submit votes: ${error.message}`, 'error');
+    } finally {
+      if (submitVotesBtn) submitVotesBtn.disabled = false;
+    }
+  });
+}
+
 async function initVoterPage() {
   await Promise.all([renderLeaderboard(), renderRecentResults(), renderVoterPage()]);
+  setupVoterForm();
 
   document.getElementById('refreshAllBtn')?.addEventListener('click', async () => {
     await Promise.all([renderLeaderboard(), renderRecentResults(), renderVoterPage()]);
