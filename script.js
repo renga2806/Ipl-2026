@@ -377,57 +377,59 @@ async function renderVoterPage() {
             <div class="votes-preview">
               <p class="votes-title">Votes so far (${totalVotes})</p>
               ${
-                totalVotes
-                  ? `
-                    <div class="votes-board">
-                      <div class="votes-board-head">
-                        <div class="votes-board-team" title="${escapeHtml(teamDisplayName(match.team1))}">
-                          ${escapeHtml(match.team1)}
+                totalVotes === 0
+                  ? `<p class="votes-empty">No votes yet. Suspicious silence.</p>`
+                  : isLocked
+                    ? `
+                      <div class="votes-board">
+                        <div class="votes-board-head">
+                          <div class="votes-board-team" title="${escapeHtml(teamDisplayName(match.team1))}">
+                            ${escapeHtml(match.team1)}
+                          </div>
+                          <div class="votes-board-vs">VS</div>
+                          <div class="votes-board-team" title="${escapeHtml(teamDisplayName(match.team2))}">
+                            ${escapeHtml(match.team2)}
+                          </div>
                         </div>
-                        <div class="votes-board-vs">VS</div>
-                        <div class="votes-board-team" title="${escapeHtml(teamDisplayName(match.team2))}">
-                          ${escapeHtml(match.team2)}
+
+                        <div class="votes-board-body">
+                          <div class="votes-board-col">
+                            ${
+                              team1Votes.length
+                                ? team1Votes
+                                    .map(
+                                      (vote) => `
+                                        <div class="vote-entry">
+                                          ${escapeHtml(vote.users?.name || 'Unknown')}
+                                        </div>
+                                      `
+                                    )
+                                    .join('')
+                                : `<div class="vote-entry vote-entry-empty">—</div>`
+                            }
+                          </div>
+
+                          <div class="votes-board-divider"></div>
+
+                          <div class="votes-board-col">
+                            ${
+                              team2Votes.length
+                                ? team2Votes
+                                    .map(
+                                      (vote) => `
+                                        <div class="vote-entry">
+                                          ${escapeHtml(vote.users?.name || 'Unknown')}
+                                        </div>
+                                      `
+                                    )
+                                    .join('')
+                                : `<div class="vote-entry vote-entry-empty">—</div>`
+                            }
+                          </div>
                         </div>
                       </div>
-
-                      <div class="votes-board-body">
-                        <div class="votes-board-col">
-                          ${
-                            team1Votes.length
-                              ? team1Votes
-                                  .map(
-                                    (vote) => `
-                                      <div class="vote-entry">
-                                        ${escapeHtml(vote.users?.name || 'Unknown')}
-                                      </div>
-                                    `
-                                  )
-                                  .join('')
-                              : `<div class="vote-entry vote-entry-empty">—</div>`
-                          }
-                        </div>
-
-                        <div class="votes-board-divider"></div>
-
-                        <div class="votes-board-col">
-                          ${
-                            team2Votes.length
-                              ? team2Votes
-                                  .map(
-                                    (vote) => `
-                                      <div class="vote-entry">
-                                        ${escapeHtml(vote.users?.name || 'Unknown')}
-                                      </div>
-                                    `
-                                  )
-                                  .join('')
-                              : `<div class="vote-entry vote-entry-empty">—</div>`
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  `
-                  : `<p class="votes-empty">No votes yet. Suspicious silence.</p>`
+                    `
+                    : 'Votes will be published as soon as poll is locked!'
               }
             </div>
 
