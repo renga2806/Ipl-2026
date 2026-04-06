@@ -198,17 +198,16 @@ async function renderLeaderboard() {
 
   try {
     const leaders = await computeLeaderboard();
+
     stateEl.textContent = leaders.length
       ? ''
       : 'No scores yet. Somebody still has to click something.';
+
     if (!leaders.length) return;
 
     const max = Math.max(...leaders.map((item) => item.points), 1);
 
-    // 🧠 Step 1: get top 3 unique scores
-    const topScores = [...new Set(leaders.map(l => l.points))].slice(0, 3);
-
-    // 🧠 Step 2: map score → rank (1,2,3)
+    const topScores = [...new Set(leaders.map((l) => l.points))].slice(0, 3);
     const scoreRankMap = {};
     topScores.forEach((score, i) => {
       scoreRankMap[score] = i + 1;
@@ -219,18 +218,44 @@ async function renderLeaderboard() {
         const rankClass = scoreRankMap[item.points]
           ? `rank-${scoreRankMap[item.points]}`
           : '';
+        const width = `${Math.max((item.points / max) * 100, 14)}%`;
 
         return `
-          <article class="leader-row">
-            <div class="rank-badge ${rankClass}">${index + 1}</div>
-            <div class="leader-name">${escapeHtml(item.name)} - ${item.points}</div>
-            <div class="bar-wrap">
-              <div class="bar-fill" style="width: ${(item.points / max) * 100}%"></div>
+          <article class="leader-card ${rankClass}">
+            <div class="leader-meta">
+              <span class="leader-rank">${index + 1}</span>
+
+              <div class="leader-main">
+                <button
+                  type="button"
+                  class="leader-name-btn"
+                  data-user-history="${item.id}"
+                  data-user-name="${escapeHtml(item.name)}"
+                  aria-label="View ${escapeHtml(item.name)} prediction history"
+                  title="View prediction history"
+                >
+                  <span class="leader-name-text">${escapeHtml(item.name)}</span>
+                  <span class="leader-points-inline">- ${item.points}</span>
+                  <span class="leader-info-icon">ⓘ</span>
+                </button>
+
+                <div class="leader-bar">
+                  <div class="leader-bar-fill" style="width: ${width};"></div>
+                </div>
+              </div>
             </div>
           </article>
         `;
       })
       .join('');
+
+    listEl.querySelectorAll('[data-user-history]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const userId = button.getAttribute('data-user-history');
+        const userName = button.getAttribute('data-user-name') || 'User';
+        await openUserHistoryModal(userId, userName);
+      });
+    });
   } catch (error) {
     stateEl.textContent = `Could not load leaderboard: ${error.message}`;
   }
@@ -561,7 +586,16 @@ async function renderAdminMatches() {
   listEl.innerHTML = '';
 
   try {
-    const [matches, votes] = await Promise.all([getMatches(), getVotes()]);
+    const [allMatches, votes] = await Promise.all([getMatches(), getVotes()]);
+
+    // ✅ Filter only upcoming + locked
+    const matches = allMatches
+      .filter((match) => match.status === 'upcoming' || match.status === 'locked')
+      .sort((a, b) => {
+        if (a.status === b.status) return 0;
+        return a.status === 'locked' ? -1 : 1; // locked first
+      });
+
     openCountEl.textContent = String(matches.filter((match) => match.status === 'upcoming').length);
     voteCountEl.textContent = String(votes.length);
 
@@ -926,6 +960,7 @@ async function initAdminPage() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  initUserHistoryModal();
   if (pageType === 'admin') {
     await initAdminPage();
   } else {
@@ -1011,3 +1046,141 @@ function wireRulesModal() {
 }
 
 document.addEventListener('DOMContentLoaded', wireRulesModal);
+
+function getWinnerLabel(match) {
+  if (!match) return '—';
+  if (match.status === 'abandoned' || match.winner === 'abandoned') return 'Abandoned';
+  if (match.status === 'completed' && match.winner) {
+    return normalizeTeamCode(match[match.winner]);
+  }
+  return '—';
+}
+
+function getPredictionLabel(match, selectedTeam) {
+  if (!match || !selectedTeam) return '—';
+  return normalizeTeamCode(match[selectedTeam]);
+}
+
+async function getUserVoteHistory(userId) {
+  const [matches, votes] = await Promise.all([getMatches(), getVotes()]);
+
+  const matchMap = new Map(matches.map((match) => [match.id, match]));
+
+  return votes
+    .filter((vote) => vote.user_id === userId)
+    .map((vote) => {
+      const match = matchMap.get(vote.match_id);
+      if (!match) return null;
+
+      return {
+        matchNum: match.match_num ?? '',
+        matchLabel: `${normalizeTeamCode(match.team1)} vs ${normalizeTeamCode(match.team2)}`,
+        prediction: getPredictionLabel(match, vote.selected_team),
+        winner: getWinnerLabel(match),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => {
+      const aNum = Number(a.matchNum || 9999);
+      const bNum = Number(b.matchNum || 9999);
+      return aNum - bNum;
+    });
+}
+
+function getResultBadge(prediction, winner) {
+  if (!winner || winner === '—') {
+    return `<span class="result-badge pending">—</span>`;
+  }
+
+  if (winner === 'Abandoned') {
+    return `<span class="result-badge abandoned">A</span>`;
+  }
+
+  if (prediction === winner) {
+    return `<span class="result-badge correct">✔</span>`;
+  }
+
+  return `<span class="result-badge wrong">✖</span>`;
+}
+
+async function openUserHistoryModal(userId, userName) {
+  const modalEl = document.getElementById('userHistoryModal');
+  const titleEl = document.getElementById('userHistoryTitle');
+  const bodyEl = document.getElementById('userHistoryBody');
+  if (!modalEl || !titleEl || !bodyEl) return;
+
+  titleEl.textContent = `${userName} - Prediction History`;
+  bodyEl.innerHTML = `<div class="empty-state">Loading history...</div>`;
+  modalEl.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+
+  try {
+    const history = await getUserVoteHistory(userId);
+
+    if (!history.length) {
+      bodyEl.innerHTML = `<div class="empty-state">No predictions found for this user.</div>`;
+      return;
+    }
+
+    bodyEl.innerHTML = `
+      <div class="table-scroll">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Match</th>
+              <th>Vote</th>
+              <th>Winner</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${history
+              .map(
+                (row, index) => `
+                  <tr>
+                    <td>${row.matchNum || index + 1}</td>
+                    <td>${escapeHtml(row.matchLabel)}</td>
+                    <td>${escapeHtml(row.prediction)}</td>
+                    <td>
+                      ${escapeHtml(row.winner)}
+                      ${getResultBadge(row.prediction, row.winner)}
+                    </td>
+                  </tr>
+                `
+              )
+              .join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  } catch (error) {
+    bodyEl.innerHTML = `<div class="empty-state">Could not load history: ${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function closeUserHistoryModal() {
+  const modalEl = document.getElementById('userHistoryModal');
+  if (!modalEl) return;
+  modalEl.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+}
+
+function initUserHistoryModal() {
+  const modalEl = document.getElementById('userHistoryModal');
+  const closeBtn = document.getElementById('closeUserHistoryModal');
+  if (!modalEl || !closeBtn) return;
+
+  closeBtn.addEventListener('click', closeUserHistoryModal);
+
+  modalEl.addEventListener('click', (event) => {
+    if (event.target === modalEl) {
+      closeUserHistoryModal();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modalEl.classList.contains('hidden')) {
+      closeUserHistoryModal();
+    }
+  });
+}
