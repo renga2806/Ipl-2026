@@ -1335,4 +1335,20 @@ code {
     margin-left: 4px;
     font-size: 0.72rem;
   }
+
+  .result-badge.correct {
+    color: #1f9d67;
+  }
+
+  .result-badge.wrong {
+    color: #d14343;
+  }
+
+  .result-badge.pending {
+    color: #6b7280;
+  }
+
+  .result-badge.abandoned {
+    color: #d18b16;
+  }
 }
